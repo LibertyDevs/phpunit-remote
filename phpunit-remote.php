@@ -5,6 +5,7 @@
  * Procject configuration
  */
 $l_project_root = "/Users/liberty/works/virtual_machines/vm1/crawler";
+$l_test_root = $l_project_root . "/app/tests";
 $r_project_root = "/vagrant_data/crawler";
 $r_test_root = $r_project_root . "/app/tests";
 $r_phpunit_path = $r_project_root . "/vendor/bin/phpunit";
@@ -31,7 +32,6 @@ $r_nb_suite_path = "/tmp/NetBeansSuite.php";
  */
 $l_test_code_path = trim(rtrim(shell_exec('pwd')));
 
-
 // Set Arguments
 $l_phpunit_xml_log_path = null;
 $r_phpunit_xml_log_path = null;
@@ -54,7 +54,7 @@ for ($i = 1; $i < count($argv); $i++) {
 
     // replace: run path
     if (preg_match("/^--run\=/", $argv[$i]) === 1) {
-        $regex = preg_quote($l_test_code_path, "/");
+        $regex = preg_quote($l_test_root, "/");
         $r_phpunit_args[] = preg_replace("/{$regex}/", $r_test_root, $argv[$i]);
         continue;
     }
@@ -136,7 +136,7 @@ stream_set_blocking($stream, true);
 stream_set_blocking($error_stream, true);
 
 // Whichever of the two below commands is listed first will receive its appropriate output.  The second command receives nothing
-$phpunit_result_log = preg_replace("/" . preg_quote($r_test_root, "/") . "/", $l_test_code_path, stream_get_contents($stream));
+$phpunit_result_log = preg_replace("/" . preg_quote($r_test_root, "/") . "/", $l_test_root, stream_get_contents($stream));
 $phpunit_result_log_error = preg_replace("/" . preg_quote($r_project_root, "/") . "/", $l_project_root, stream_get_contents($error_stream));
 
 // Close the streams
