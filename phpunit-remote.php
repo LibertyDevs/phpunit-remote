@@ -107,10 +107,10 @@ $r_phpunit_args[] = $r_phpunit_configuration_path;
  */
 $conn = ssh2_connect($r_host, $r_port, array('hostkey' => 'ssh-rsa'));
 if (!ssh2_connect($r_host, $r_port, array('hostkey' => 'ssh-rsa'))) {
-    die("Connection failure to host: server_name:{$r_host} port:{$r_port} user: {$_user} publickey_path: {$pubkey} privatekey_path: {$privkey}");
+    die("Connection failure to host: server_name:{$r_host} port:{$r_port} user: {$r_user} publickey_path: {$pubkey} privatekey_path: {$privkey}");
 }
 if (!ssh2_auth_pubkey_file($conn, $r_user, $pubkey, $privkey)) {
-    die("Authentication failure to host: server_name:{$r_host} port:{$r_port} user: {$_user} publickey_path: {$pubkey} privatekey_path: {$privkey}");
+    die("Authentication failure to host: server_name:{$r_host} port:{$r_port} user: {$r_user} publickey_path: {$pubkey} privatekey_path: {$privkey}");
 }
 
 /**
