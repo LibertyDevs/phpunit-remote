@@ -4,7 +4,7 @@
 /**
  * Procject configuration
  */
-$l_project_root = "/Users/liberty/works/virtual_machines/vm1/crawler";
+$l_project_root = "/Users/inamotoryuusuke/works/virtual_machines/vm1/crawler";
 $l_test_root = $l_project_root . "/app/tests";
 $r_project_root = "/vagrant_data/crawler";
 $r_test_root = $r_project_root . "/app/tests";
@@ -18,8 +18,8 @@ $r_phpunit_bootstrap_path = "{$r_project_root}/bootstrap/autoload.php";
 $r_host = 'vm1';
 $r_port = '2222';
 $r_user = 'vagrant';
-$pubkey = '/Users/liberty/.vagrant.d/insecure_public_key';
-$privkey = '/Users/liberty/.vagrant.d/insecure_private_key';
+$pubkey = '/Users/inamotoryuusuke/.vagrant.d/insecure_public_key';
+$privkey = '/Users/inamotoryuusuke/.vagrant.d/insecure_private_key';
 
 /**
  * remote nb path configuration
@@ -30,8 +30,6 @@ $r_nb_suite_path = "/tmp/NetBeansSuite.php";
 /**
  * pre execute settings
  */
-$l_test_code_path = trim(rtrim(shell_exec('pwd')));
-
 // Set Arguments
 $l_phpunit_xml_log_path = null;
 $r_phpunit_xml_log_path = null;
@@ -157,7 +155,7 @@ if (!ssh2_scp_recv($conn, $r_phpunit_xml_log_path, $l_phpunit_xml_log_path)) {
 } else {
     // Replace test root path
     $_phpunit_xml_log_str = file_get_contents($l_phpunit_xml_log_path);
-    $_replaced_phpunit_xml_log_str = preg_replace("/" . preg_quote($r_test_root, "/") . "/", $l_test_code_path, $_phpunit_xml_log_str);
+    $_replaced_phpunit_xml_log_str = preg_replace("/" . preg_quote($r_test_root, "/") . "/", $l_test_root, $_phpunit_xml_log_str);
     file_put_contents($l_phpunit_xml_log_path, $_replaced_phpunit_xml_log_str);
 }
 
