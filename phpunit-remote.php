@@ -4,7 +4,7 @@
 /**
  * Procject configuration
  */
-$l_project_root = "/Users/inamotoryuusuke/works/virtual_machines/vm1/crawler";
+$l_project_root = "/Users/liberty/works/virtual_machines/vm1/crawler";
 $l_test_root = $l_project_root . "/app/tests";
 $r_project_root = "/vagrant_data/crawler";
 $r_test_root = $r_project_root . "/app/tests";
@@ -18,8 +18,8 @@ $r_phpunit_bootstrap_path = "{$r_project_root}/bootstrap/autoload.php";
 $r_host = 'vm1';
 $r_port = '2222';
 $r_user = 'vagrant';
-$pubkey = '/Users/inamotoryuusuke/.vagrant.d/insecure_public_key';
-$privkey = '/Users/inamotoryuusuke/.vagrant.d/insecure_private_key';
+$pubkey = '/Users/liberty/.vagrant.d/insecure_public_key';
+$privkey = '/Users/liberty/.vagrant.d/insecure_private_key';
 
 /**
  * remote nb path configuration
