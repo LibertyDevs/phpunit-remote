@@ -18,7 +18,10 @@ phpunit-remote
 - [カスタムPHPUnitスクリプトの使用]のみチェックをいれてダウンロードしたスクリプトを指定
 - いつも通りテスト実行
 
+設定箇所抜粋:
+
 ```php/Config.php
+    //// user configuration //////////////////////////////////
     /**
      * Procject configuration
      */
