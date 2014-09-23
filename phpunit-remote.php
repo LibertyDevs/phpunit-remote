@@ -1,43 +1,46 @@
 <?php
 
-//// user configuration //////////////////////////////////
+require_once __DIR__ . '/Config.php';
+
+//// get user configuration //////////////////////////////////
+$config = Config::getInstance();
 /**
  * Procject configuration
  */
-$l_project_root = "/Users/liberty/works/virtual_machines/vm1/crawler";
-$l_test_root = $l_project_root . "/app/tests";
-$r_project_root = "/vagrant_data/crawler";
-$r_test_root = $r_project_root . "/app/tests";
-$r_phpunit_path = $r_project_root . "/vendor/bin/phpunit";
-$r_phpunit_configuration_path = "{$r_project_root}/phpunit.xml";
-$r_phpunit_bootstrap_path = "{$r_project_root}/bootstrap/autoload.php";
+$projectRootRemote = $config->getProjectRootLocal();
+$projectRootLocal = $config->getProjectRootRemote();
+$testRootLocal = $config->getTestRootLocal();
+$testRootRemote = $config->getTestRootRemote();
+$phpunitPathRemote = $config->getPhpunitPathRemote();
+$phpunitConfigurationPathRemote = $config->getPhpunitConfigurationPathRemote();
+$phpunitBootstrapPathRemote = $config->getPhpunitBootstrapPathRemote();
 
 /**
  * ssh2 configuration
  */
-$r_host = 'vm1';
-$r_port = '2222';
-$r_user = 'vagrant';
-$pubkey = '/Users/liberty/.vagrant.d/insecure_public_key';
-$privkey = '/Users/liberty/.vagrant.d/insecure_private_key';
+$hostRemote = $config->getHostRemote();
+$portRemote = $config->getPortRemote();
+$userRemote = $config->getUserRemote();
+$pubkey = $config->getPubkey();
+$privkey = $config->getPrivkey();
 
 /**
  * remote nb path configuration
  */
-$r_nb_suite_path = "/tmp/NetBeansSuite.php";
+$nbSuitePathRemote = $config->getNbSuitePathRemote();
 //////////////////////////////////////////////////////
 
 /**
  * pre execute settings
  */
 // Set Arguments
-$l_phpunit_xml_log_path = null;
-$r_phpunit_xml_log_path = null;
-$l_phpunit_coverage_path = null;
-$r_phpunit_coverage_path = null;
-$l_nb_suite_path = null; // local netbeans suite path
-$r_phpunit_args = null; // set arguments for remote host
-$is_enable_coverage = false; // --coverage-clover: specified:true
+$phpunitXmlLogPathLocal = null;
+$phpunitXmlLogPathRemote = null;
+$phpunitCoveragePathLocal = null;
+$phpunitCoveragePathRemote = null;
+$nbSuitePathLocal = null; // local netbeans suite path
+$phpunitArgsRemote = null; // set arguments for remote host
+$isEnableCoverage = false; // --coverage-clover: specified:true
 for ($i = 1; $i < count($argv); $i++) {
 
     // error: --bootstrap not supported
@@ -52,79 +55,79 @@ for ($i = 1; $i < count($argv); $i++) {
 
     // replace: run path
     if (preg_match("/^--run\=/", $argv[$i]) === 1) {
-        $regex = preg_quote($l_test_root, "/");
-        $r_phpunit_args[] = preg_replace("/{$regex}/", $r_test_root, $argv[$i]);
+        $regex = preg_quote($testRootLocal, "/");
+        $phpunitArgsRemote[] = preg_replace("/{$regex}/", $testRootRemote, $argv[$i]);
         continue;
     }
 
     // replcae: --log-junit file_path
     if (preg_match("/^--log-junit/", $argv[$i]) === 1) {
-        $r_phpunit_args[] = '--log-junit';
+        $phpunitArgsRemote[] = '--log-junit';
         $i++;
-        $l_phpunit_xml_log_path = $argv[$i];
-        $r_phpunit_xml_log_path = preg_replace("/^\/var/", "/tmp", $argv[$i]);
-        $r_phpunit_args[] = $r_phpunit_xml_log_path;
+        $phpunitXmlLogPathLocal = $argv[$i];
+        $phpunitXmlLogPathRemote = preg_replace("/^\/var/", "/tmp", $argv[$i]);
+        $phpunitArgsRemote[] = $phpunitXmlLogPathRemote;
         continue;
     }
 
     // replcae: --coverage-clover file_path
     if (preg_match("/^--coverage-clover/", $argv[$i]) === 1) {
-        $r_phpunit_args[] = '--coverage-clover';
+        $phpunitArgsRemote[] = '--coverage-clover';
         $i++;
-        $l_phpunit_coverage_path = $argv[$i];
-        $r_phpunit_coverage_path = preg_replace("/^\/var/", "/tmp", $argv[$i]);
-        $r_phpunit_args[] = $r_phpunit_coverage_path;
-        $is_enable_coverage = true;
+        $phpunitCoveragePathLocal = $argv[$i];
+        $phpunitCoveragePathRemote = preg_replace("/^\/var/", "/tmp", $argv[$i]);
+        $phpunitArgsRemote[] = $phpunitCoveragePathRemote;
+        $isEnableCoverage = true;
         continue;
     }
 
     // replcae: --filter arg string
     if (preg_match("/^--filter/", $argv[$i]) === 1) {
-        $r_phpunit_args[] = '--filter';
+        $phpunitArgsRemote[] = '--filter';
         $i++;
-        $r_phpunit_args[] = $argv[$i];
+        $phpunitArgsRemote[] = $argv[$i];
         continue;
     }
 
     // set: Set NetBeansSuite path
     if (preg_match("/NetBeansSuite\.php$/", $argv[$i]) === 1) {
-        $l_nb_suite_path = $argv[$i];
-        $r_phpunit_args[] = $r_nb_suite_path;
+        $nbSuitePathLocal = $argv[$i];
+        $phpunitArgsRemote[] = $nbSuitePathRemote;
         continue;
     }
 
     // others
-    $r_phpunit_args[] = $argv[$i];
+    $phpunitArgsRemote[] = $argv[$i];
 }
 // add bootstrap and phpunit_xml path
-$r_phpunit_args[] = '--bootstrap';
-$r_phpunit_args[] = $r_phpunit_bootstrap_path;
-$r_phpunit_args[] = '--configuration';
-$r_phpunit_args[] = $r_phpunit_configuration_path;
+$phpunitArgsRemote[] = '--bootstrap';
+$phpunitArgsRemote[] = $phpunitBootstrapPathRemote;
+$phpunitArgsRemote[] = '--configuration';
+$phpunitArgsRemote[] = $phpunitConfigurationPathRemote;
 
 /**
  * Connection to host
  */
-$conn = ssh2_connect($r_host, $r_port, array('hostkey' => 'ssh-rsa'));
-if (!ssh2_connect($r_host, $r_port, array('hostkey' => 'ssh-rsa'))) {
-    die("Connection failure to host: server_name:{$r_host} port:{$r_port} user: {$r_user} publickey_path: {$pubkey} privatekey_path: {$privkey}");
+$conn = ssh2_connect($hostRemote, $portRemote, array('hostkey' => 'ssh-rsa'));
+if (!ssh2_connect($hostRemote, $portRemote, array('hostkey' => 'ssh-rsa'))) {
+    die("Connection failure to host: server_name:{$hostRemote} port:{$portRemote} user: {$userRemote} publickey_path: {$pubkey} privatekey_path: {$privkey}");
 }
-if (!ssh2_auth_pubkey_file($conn, $r_user, $pubkey, $privkey)) {
-    die("Authentication failure to host: server_name:{$r_host} port:{$r_port} user: {$r_user} publickey_path: {$pubkey} privatekey_path: {$privkey}");
+if (!ssh2_auth_pubkey_file($conn, $userRemote, $pubkey, $privkey)) {
+    die("Authentication failure to host: server_name:{$hostRemote} port:{$portRemote} user: {$userRemote} publickey_path: {$pubkey} privatekey_path: {$privkey}");
 }
 
 /**
  * Transfer NetBeansSuite to host
  */
-if (!ssh2_scp_send($conn, $l_nb_suite_path, $r_nb_suite_path)) {
-    die("Trancefer failure to host: local_path:{$l_nb_suite_path} remote_path:{$r_nb_suite_path}");
+if (!ssh2_scp_send($conn, $nbSuitePathLocal, $nbSuitePathRemote)) {
+    die("Trancefer failure to host: local_path:{$nbSuitePathLocal} remote_path:{$nbSuitePathRemote}");
 }
 
 /**
  * Execute phpunit on remote server
  */
-$_quoted_args = '"' . implode("\" \"", $r_phpunit_args) . '"';
-$phpunit_command = $r_phpunit_path . " " . $_quoted_args;
+$_quoted_args = '"' . implode("\" \"", $phpunitArgsRemote) . '"';
+$phpunit_command = $phpunitPathRemote . " " . $_quoted_args;
 
 $stream = ssh2_exec($conn, $phpunit_command);
 $error_stream = ssh2_fetch_stream($stream, SSH2_STREAM_STDERR);
@@ -134,8 +137,8 @@ stream_set_blocking($stream, true);
 stream_set_blocking($error_stream, true);
 
 // Whichever of the two below commands is listed first will receive its appropriate output.  The second command receives nothing
-$phpunit_result_log = preg_replace("/" . preg_quote($r_test_root, "/") . "/", $l_test_root, stream_get_contents($stream));
-$phpunit_result_log_error = preg_replace("/" . preg_quote($r_project_root, "/") . "/", $l_project_root, stream_get_contents($error_stream));
+$phpunit_result_log = preg_replace("/" . preg_quote($testRootRemote, "/") . "/", $testRootLocal, stream_get_contents($stream));
+$phpunit_result_log_error = preg_replace("/" . preg_quote($projectRootLocal, "/") . "/", $projectRootRemote, stream_get_contents($error_stream));
 
 // Close the streams
 fclose($error_stream);
@@ -150,23 +153,23 @@ if ($phpunit_result_log_error) {
 /**
  * Get phpunit_log and coverage_log
  */
-if (!ssh2_scp_recv($conn, $r_phpunit_xml_log_path, $l_phpunit_xml_log_path)) {
-    die("Receive failure to host: local_path:{$l_phpunit_xml_log_path} remote_path:{$r_phpunit_xml_log_path}");
+if (!ssh2_scp_recv($conn, $phpunitXmlLogPathRemote, $phpunitXmlLogPathLocal)) {
+    die("Receive failure to host: local_path:{$phpunitXmlLogPathLocal} remote_path:{$phpunitXmlLogPathRemote}");
 } else {
     // Replace test root path
-    $_phpunit_xml_log_str = file_get_contents($l_phpunit_xml_log_path);
-    $_replaced_phpunit_xml_log_str = preg_replace("/" . preg_quote($r_test_root, "/") . "/", $l_test_root, $_phpunit_xml_log_str);
-    file_put_contents($l_phpunit_xml_log_path, $_replaced_phpunit_xml_log_str);
+    $_phpunit_xml_log_str = file_get_contents($phpunitXmlLogPathLocal);
+    $_replaced_phpunit_xml_log_str = preg_replace("/" . preg_quote($testRootRemote, "/") . "/", $testRootLocal, $_phpunit_xml_log_str);
+    file_put_contents($phpunitXmlLogPathLocal, $_replaced_phpunit_xml_log_str);
 }
 
-if ($is_enable_coverage) {
-    if (!ssh2_scp_recv($conn, $r_phpunit_coverage_path, $l_phpunit_coverage_path)) {
-        die("Receive failure to host: local_path:{$l_phpunit_coverage_path} remote_path:{$r_phpunit_coverage_path}");
+if ($isEnableCoverage) {
+    if (!ssh2_scp_recv($conn, $phpunitCoveragePathRemote, $phpunitCoveragePathLocal)) {
+        die("Receive failure to host: local_path:{$phpunitCoveragePathLocal} remote_path:{$phpunitCoveragePathRemote}");
     } else {
         // Replace project root path
-        $_phpunit_coverage_str = file_get_contents($l_phpunit_coverage_path);
-        $_replaced_hpunit_coverage_str = preg_replace("/" . preg_quote($r_project_root, "/") . "/", $l_project_root, $_phpunit_coverage_str);
-        file_put_contents($l_phpunit_coverage_path, $_replaced_hpunit_coverage_str);
+        $_phpunit_coverage_str = file_get_contents($phpunitCoveragePathLocal);
+        $_replaced_hpunit_coverage_str = preg_replace("/" . preg_quote($projectRootLocal, "/") . "/", $projectRootRemote, $_phpunit_coverage_str);
+        file_put_contents($phpunitCoveragePathLocal, $_replaced_hpunit_coverage_str);
     }
 }
 
