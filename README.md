@@ -20,7 +20,7 @@ phpunit-remote
 
 設定箇所抜粋:
 
-```php/Config.php
+```php
     //// user configuration //////////////////////////////////
     /**
      * Procject configuration
